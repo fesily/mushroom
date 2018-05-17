@@ -1,4 +1,5 @@
 #include <mushroom\mushroom.h>
+#include "mushroom/VirtualTableHook.hpp"
 
 struct ITest
 {
@@ -19,8 +20,10 @@ struct StlFunctionMethodInvocationHandler : mushroom::MethodInvocationHandler<R,
 	}
 };
 #include <iostream>
+void HookVirtualTableTest();
 int main()
 {
+	HookVirtualTableTest();
 	using namespace mushroom;
 	auto proxy = make_dynamic_proxy<ITest>();
 	auto fn = std::make_shared<StlFunctionMethodInvocationHandler<void>>();
@@ -42,4 +45,37 @@ int main()
 	auto& id2 = typeid(intance);
 	id2.name();
     return 0;
+}
+struct VT
+{
+	virtual void t() {}
+	virtual ~VT() = default;
+};
+struct VT1
+{
+	virtual ~VT1() = default;
+	virtual void t1() {}
+};
+struct VTD : VT, VT1
+{
+	void t() override {}
+};
+
+
+void HookVirtualTableTest()
+{
+	int a = 0;
+	for (size_t i = 0; i < 999999; i++)
+	{
+		{
+			// this will memory leak ,because  t.~VT() not call virtual table
+			VT t;
+			auto ptr = &t;
+			mushroom::VirtualTableHook::HookVT(ptr);
+		}
+		VT* t = new VTD;
+		mushroom::VirtualTableHook::HookVT(t);
+		delete t;
+	}
+	a = 999;
 }
