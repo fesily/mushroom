@@ -52,6 +52,4 @@ namespace fakeit {
             return vtSize;
         }
     };
-
-
 }

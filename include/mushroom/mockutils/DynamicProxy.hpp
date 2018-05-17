@@ -48,7 +48,7 @@ public:
 		  setCookie(VT_COOKIE_INDEX, static_cast<InvocationHandlerCollection*>(this));
 		GetFake().getVirtualTable().initAll(union_cast<void*>(&NullMethod::throw_error_no_method));
 	}
-	~DynamicProxy()
+	virtual ~DynamicProxy()
 	{
 		auto f = std::addressof(GetFake());
 		if (f != nullptr)

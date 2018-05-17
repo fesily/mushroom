@@ -34,8 +34,12 @@ int main()
 		std::cout << "t3";
 	};
 	bind_method<0>(proxy, &ITest::t5, fn);
-	bind_method<0>(proxy, &ITest::t3, fn1);
-	proxy.GetInstance().t5();
-	proxy.GetInstance().t3();
+	bind_method<1>(proxy, &ITest::t3, fn1);
+	auto& intance = proxy.GetInstance();
+	intance.t5();
+	intance.t3();
+	auto& id1 = typeid(ITest);
+	auto& id2 = typeid(intance);
+	id2.name();
     return 0;
 }

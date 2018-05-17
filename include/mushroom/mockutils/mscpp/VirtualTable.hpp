@@ -34,16 +34,15 @@ namespace fakeit {
         /* since since the first member is placed at 0.
         /* In the case of multiple inheritance, this value may have a positive value.
         /************************************************************************/
-        int mdisp;
+        int32_t mdisp;
 
-        int pdisp;  // vtable displacement
-        int vdisp;  //displacement inside vtable
+		int32_t pdisp;  // vtable displacement
+		int32_t vdisp;  //displacement inside vtable
 
         PMD() :
                 mdisp(0), pdisp(-1), vdisp(0) {
         }
     };
-
     struct RTTIBaseClassDescriptor {
         RTTIBaseClassDescriptor() :
                 pTypeDescriptor(nullptr), numContainedBases(0), attributes(0) {
@@ -53,7 +52,9 @@ namespace fakeit {
         dword_ numContainedBases; //number of nested classes following in the Base Class Array
         struct PMD where;        //pointer-to-member displacement info
         dword_ attributes;        //flags, usually 0
+		void* pClassDescriptor;
     };
+	static_assert(sizeof(RTTIBaseClassDescriptor) == 28, "");
 
     template<typename C, typename... baseclasses>
     struct RTTIClassHierarchyDescriptor {
@@ -104,16 +105,17 @@ namespace fakeit {
 	struct RTTICompleteObjectLocator {
 #ifdef _WIN64
 		RTTICompleteObjectLocator(const std::type_info &unused) :
-			signature(0), offset(0), cdOffset(0),
-			typeDescriptorOffset(0), classDescriptorOffset(0)
+			signature(1), offset(0), cdOffset(0),
+			pTypeDescriptor(&info), pClassDescriptor(new RTTIClassHierarchyDescriptor<C, baseclasses...>())
 		{
 		}
 
 		dword_ signature; //always zero ?
 		dword_ offset;    //offset of this vtable in the complete class
 		dword_ cdOffset;  //constructor displacement offset
-		dword_ typeDescriptorOffset;
-		dword_ classDescriptorOffset;
+		const std::type_info *pTypeDescriptor; //TypeDescriptor of the complete class
+		struct RTTIClassHierarchyDescriptor<C, baseclasses...> *pClassDescriptor; //describes inheritance hierarchy
+		RTTICompleteObjectLocator* pSelf;
 #else
 		RTTICompleteObjectLocator(const std::type_info &info) :
 			signature(0), offset(0), cdOffset(0),
